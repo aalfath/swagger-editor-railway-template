@@ -1,0 +1,8 @@
+# Local test: docker compose -f compose.test.yaml up --build
+services:
+  swagger-editor:
+    build: .
+    environment:
+      PORT: "8080"
+    ports:
+      - "8080:8080"
