@@ -1,15 +1,18 @@
 #!/bin/sh
 # Writes /etc/nginx/conf.d/default.conf for Railway.
 #   PORT                 port to listen on (Railway sets it; default 8080)
-#   BASIC_AUTH_USERNAME  optional: with BASIC_AUTH_PASSWORD, protects the editor with HTTP basic auth
-#   BASIC_AUTH_PASSWORD  optional
+#   BASIC_AUTH_PASSWORD  when set, the editor asks for HTTP basic auth (the template generates one)
+#   BASIC_AUTH_USERNAME  basic auth user name (default: admin)
+# Remove BASIC_AUTH_PASSWORD to make the editor public. /healthz never asks for auth.
 set -eu
 
 PORT="${PORT:-8080}"
 case "$PORT" in ''|*[!0-9]*) echo "40-railway.sh: PORT must be a number, got '$PORT'" >&2; exit 1;; esac
 
 AUTH_BLOCK=""
-if [ -n "${BASIC_AUTH_USERNAME:-}" ] && [ -n "${BASIC_AUTH_PASSWORD:-}" ]; then
+BASIC_AUTH_USERNAME="${BASIC_AUTH_USERNAME:-admin}"
+case "$BASIC_AUTH_USERNAME" in *:*) echo "40-railway.sh: BASIC_AUTH_USERNAME must not contain ':'" >&2; exit 1;; esac
+if [ -n "${BASIC_AUTH_PASSWORD:-}" ]; then
   SALT="$(head -c 12 /dev/urandom | od -An -tx1 | tr -d ' \n' | cut -c1-16)"
   HASH="$(mkpasswd -m sha512 "$BASIC_AUTH_PASSWORD" "$SALT")"
   printf '%s:%s\n' "$BASIC_AUTH_USERNAME" "$HASH" > /etc/nginx/.htpasswd
@@ -17,8 +20,8 @@ if [ -n "${BASIC_AUTH_USERNAME:-}" ] && [ -n "${BASIC_AUTH_PASSWORD:-}" ]; then
   chown root:nginx /etc/nginx/.htpasswd
   AUTH_BLOCK='auth_basic "Swagger Editor"; auth_basic_user_file /etc/nginx/.htpasswd;'
   echo "40-railway.sh: basic auth enabled for user '$BASIC_AUTH_USERNAME'"
-elif [ -n "${BASIC_AUTH_USERNAME:-}${BASIC_AUTH_PASSWORD:-}" ]; then
-  echo "40-railway.sh: set both BASIC_AUTH_USERNAME and BASIC_AUTH_PASSWORD to enable basic auth; it stays off" >&2
+else
+  echo "40-railway.sh: BASIC_AUTH_PASSWORD is empty, so the editor is public (no login)"
 fi
 
 # Listen on IPv6 too when the kernel has it (Railway's private network is IPv6).
