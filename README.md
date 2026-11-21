@@ -14,7 +14,7 @@ One-click [Swagger Editor](https://github.com/swagger-api/swagger-editor) for [R
 - Image: `swaggerapi/swagger-editor:v5.11.1@sha256:63ca789b8eb565dcf9174b7fc615ceedf48a9f795edf77cb1b8d532270d7ab18` (pinned by version and digest)
 - The wrapper only adds an nginx config hook (`rootfs/40-railway.sh`) and pre-compresses the large JavaScript bundles at build time.
 
-No database and no volume: Swagger Editor runs entirely in the browser and keeps the spec you are editing in that browser's local storage. Use **File → Save as YAML/JSON** to keep a copy.
+No database and no volume: Swagger Editor runs entirely in the browser and keeps the spec you are editing in that browser's local storage. Save a copy from the editor's File menu to keep it.
 
 ## Variables
 
